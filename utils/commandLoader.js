@@ -11,13 +11,20 @@ export async function loadCommands(client) {
 
   for (const file of commandFiles) {
     const filePath = join(commandsPath, file);
-    const command = await import(`file://${filePath}`);
-    
-    if ('data' in command && 'execute' in command) {
-      client.commands.set(command.data.name, command);
-      console.log(`✅ Loaded command: ${command.data.name}`);
-    } else {
-      console.log(`⚠️  Command at ${file} is missing required "data" or "execute" property.`);
+    try {
+      const command = await import(`file://${filePath}`);
+      
+      // Handle both default and named exports
+      const cmd = command.default || command;
+      
+      if ('data' in cmd && 'execute' in cmd) {
+        client.commands.set(cmd.data.name, cmd);
+        console.log(`✅ Loaded command: ${cmd.data.name}`);
+      } else {
+        console.log(`⚠️  Command at ${file} is missing required "data" or "execute" property.`);
+      }
+    } catch (error) {
+      console.error(`❌ Error loading command ${file}:`, error.message);
     }
   }
 }

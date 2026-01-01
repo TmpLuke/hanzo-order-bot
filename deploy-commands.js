@@ -15,9 +15,15 @@ export async function registerCommands() {
   // Load all command data
   for (const file of commandFiles) {
     const filePath = join(commandsPath, file);
-    const command = await import(`file://${filePath}`);
-    if ('data' in command && 'execute' in command) {
-      commands.push(command.data.toJSON());
+    try {
+      const command = await import(`file://${filePath}`);
+      const cmd = command.default || command;
+      
+      if ('data' in cmd && 'execute' in cmd) {
+        commands.push(cmd.data.toJSON());
+      }
+    } catch (error) {
+      console.error(`❌ Error loading command ${file}:`, error.message);
     }
   }
 
